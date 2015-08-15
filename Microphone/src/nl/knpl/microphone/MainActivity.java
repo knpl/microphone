@@ -73,6 +73,8 @@ public class MainActivity extends ActionBarActivity {
         isRecording = isPlaying = false;
         recorder = null;
         player = null;
+
+		Tests.testFFT();
     }
     
     private void record() {

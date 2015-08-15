@@ -60,6 +60,147 @@ public class DFT {
 			out[i] /= n;
 		}
 	}
+
+	/* Returns n / 2 twiddle factors required to compute the fft */
+	public static Comp[] twiddleFactors(int n, int sigma) {
+		int h = n >> 1;
+		if (!(sigma == 1 || sigma == -1))
+			throw new IllegalArgumentException("sigma must be equal to 1 or -1.");
+		Comp[] twiddles = new Comp[h];
+
+		double omega = 2 * Math.PI / n;
+		if (sigma == -1)
+			omega = -omega;
+
+		for (int i = 0; i < h; ++i)
+			twiddles[i] = Comp.fromPolar(1, i * omega);
+
+		return twiddles;
+	}
+
+	public static float[] twiddleFactorsPacked(int n, int sigma) {
+		int h = n >> 1;
+		if (!(sigma == 1 || sigma == -1))
+			throw new IllegalArgumentException("sigma must be equal to 1 or -1.");
+		float[] twiddles = new float[n];
+
+		double omega = 2 * Math.PI / n;
+		if (sigma == -1)
+			omega = -omega;
+
+		for (int i = 0; i < h; ++i) {
+			twiddles[2*i]   = (float)Math.cos(i * omega);
+			twiddles[2*i+1] = (float)Math.sin(i * omega);
+		}
+
+		return twiddles;
+	}
+
+	public static double[] twiddleFactorsPackedDoubles(int n, int sigma) {
+		int h = n >> 1;
+		if (!(sigma == 1 || sigma == -1))
+			throw new IllegalArgumentException("sigma must be equal to 1 or -1.");
+		double[] twiddles = new double[n];
+
+		double omega = 2 * Math.PI / n;
+		if (sigma == -1)
+			omega = -omega;
+
+		for (int i = 0; i < h; ++i) {
+			twiddles[2*i]   = Math.cos(i * omega);
+			twiddles[2*i+1] = Math.sin(i * omega);
+		}
+
+		return twiddles;
+	}
+
+	public static void cfft_iterative_packed(double[] a, double[] twiddles, int lgn) {
+		final int n = a.length >> 1;
+		bitrevShuffle(a);
+		double evenreal, evenimag,
+				oddreal, oddimag,
+				twidreal, twidimag,
+				buf;
+		int h, step, twididx;
+		for (int k = 1; k <= lgn; k++) {
+			step = 1 << k;
+			h = step >> 1;
+			for (int start = 0; start < n; start += step) {
+				for (int i = start; i < start + h; i++) {
+					evenreal = a[2*i];
+					evenimag = a[2*i+1];
+					oddreal  = a[2*(i+h)];
+					oddimag  = a[2*(i+h)+1];
+
+					twididx = (i-start) << (lgn-k);
+					twidreal = twiddles[2*twididx];
+					twidimag = twiddles[2*twididx+1];
+
+					buf     = oddreal * twidreal - oddimag * twidimag;
+					oddimag = oddreal * twidimag + oddimag * twidreal;
+					oddreal = buf;
+
+					a[2*i]   = evenreal + oddreal;
+					a[2*i+1] = evenimag + oddimag;
+					a[2*(i+h)]   = evenreal - oddreal;
+					a[2*(i+h)+1] = evenimag - oddimag;
+				}
+			}
+		}
+	}
+
+	public static void cfft_iterative_packed(float[] a, float[] twiddles, int lgn) {
+		final int n = a.length >> 1;
+		bitrevShuffle(a);
+		float evenreal, evenimag,
+				oddreal, oddimag,
+				twidreal, twidimag,
+				buf;
+		int h, step, twididx;
+		for (int k = 1; k <= lgn; k++) {
+			step = 1 << k;
+			h = step >> 1;
+			for (int start = 0; start < n; start += step) {
+				for (int i = start; i < start + h; i++) {
+					evenreal = a[2*i];
+					evenimag = a[2*i+1];
+					oddreal  = a[2*(i+h)];
+					oddimag  = a[2*(i+h)+1];
+
+					twididx = (i-start) << (lgn-k);
+					twidreal = twiddles[2*twididx];
+					twidimag = twiddles[2*twididx+1];
+
+					buf     = oddreal * twidreal - oddimag * twidimag;
+					oddimag = oddreal * twidimag + oddimag * twidreal;
+					oddreal = buf;
+
+					a[2*i]   = evenreal + oddreal;
+					a[2*i+1] = evenimag + oddimag;
+					a[2*(i+h)]   = evenreal - oddreal;
+					a[2*(i+h)+1] = evenimag - oddimag;
+				}
+			}
+		}
+	}
+
+	public static void cfft_iterative(Comp[] a, Comp[] twiddles, int lgn) {
+		final int n = a.length;
+		bitrevShuffle(a);
+		int h, step;
+		for (int k = 1; k <= lgn; k++) {
+			step = 1 << k;
+			h = step >> 1;
+			for (int start = 0; start < n; start += step) {
+				for (int i = start; i < start + h; i++) {
+					Comp even = a[i];
+					Comp odd  = Comp.mul(a[i+h], twiddles[(i-start) << (lgn-k)]);
+					a[i]   = Comp.add(even, odd);
+					a[i+h] = Comp.sub(even, odd);
+				}
+			}
+		}
+	}
 	
 	public static void cfft(Comp[] a) {
 		bitrevShuffle(a);
@@ -89,15 +230,14 @@ public class DFT {
 			return;
 		}
 		
-		final int h = n / 2,
-				  pivot = start + h;
+		final int h = n / 2;
 		cfft_r(a, start, h, sign);
-		cfft_r(a, pivot, h, sign);
+		cfft_r(a, start + h, h, sign);
 		
 		final Comp root = Comp.fromPolar(1, sign * 2 * Math.PI / n);
 		Comp twiddle = new Comp(1, 0);
 		
-		for (int i = start; i < pivot; ++i) {
+		for (int i = start; i < start + h; ++i) {
 			even = a[i];
 			odd  = Comp.mul(twiddle, a[i+h]);
 			
@@ -240,6 +380,34 @@ public class DFT {
 				a[2*j+1] = imag;
 			}
 			
+			/* increment */
+			i += 1;
+			j = revinc(j, h);
+		}
+	}
+
+	private static void bitrevShuffle(double[] a) {
+		final int n = a.length >> 1;
+		final int h = n >> 1;
+
+		double real, imag;
+
+		int i = 0,
+				j = 0;
+		while (i < n) {
+			/* At all times: j = revinc(i).
+			 * swap a[i] and a[j] only if i < j.
+			 * This avoids double swaps and swaps where i is equal to j. */
+			if (i < j) {
+				/* swap */
+				real     = a[2*i  ];
+				imag     = a[2*i+1];
+				a[2*i  ] = a[2*j  ];
+				a[2*i+1] = a[2*j+1];
+				a[2*j  ] = real;
+				a[2*j+1] = imag;
+			}
+
 			/* increment */
 			i += 1;
 			j = revinc(j, h);
