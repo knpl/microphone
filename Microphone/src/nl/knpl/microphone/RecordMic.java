@@ -1,11 +1,14 @@
 package nl.knpl.microphone;
 
+import nl.knpl.microphone.util.PitchShift;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
 
 public class RecordMic implements Runnable {
+	
+	private static final PitchShift pitchShift = new PitchShift(1024, 8);
 	
 	public static final int SAMPLE_RATE = 44100;
 	public static final int N_SAMPLES_MIN = 4096;
@@ -75,6 +78,8 @@ public class RecordMic implements Runnable {
 			}		
 			recorder.release();
 			handler.sendEmptyMessage(start);
+			
+			pitchShift.pitchShift(samples, start, 2.0);
 		}
 		
 		synchronized (this) {

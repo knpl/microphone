@@ -1,28 +1,28 @@
 package nl.knpl.microphone.util;
 
-public class Comp {
+public class Complex {
 
 	private double real, imag;
 	
-	public Comp(double real, double imag) {
+	public Complex(double real, double imag) {
 		this.real = real;
 		this.imag = imag;
 	}
 	
-	public Comp(double real) {
+	public Complex(double real) {
 		this(real, 0);
 	}
 	
-	public Comp() {
+	public Complex() {
 		this(0, 0);
 	}
 	
-	public Comp(Comp that) {
+	public Complex(Complex that) {
 		this(that.real, that.imag);
 	}
 	
-	public static Comp fromPolar(double r, double the) {
-		return new Comp(r * Math.cos(the), r * Math.sin(the));
+	public static Complex fromPolar(double r, double the) {
+		return new Complex(r * Math.cos(the), r * Math.sin(the));
 	}
 	
 	public double real() {
@@ -41,35 +41,35 @@ public class Comp {
 		return Math.atan2(imag, real);
 	}
 	
-	public Comp add(Comp z) {
+	public Complex add(Complex z) {
 		real += z.real;
 		imag += z.imag;
 		return this;
 	}
 	
-	public Comp add(double x) {
+	public Complex add(double x) {
 		real += x;
 		return this;
 	}
 	
-	public Comp sub(Comp z) {
+	public Complex sub(Complex z) {
 		real -= z.real;
 		imag -= z.imag;
 		return this;
 	}
 	
-	public Comp sub(double x) {
+	public Complex sub(double x) {
 		real -= x;
 		return this;
 	}
 	
-	public Comp neg() {
+	public Complex neg() {
 		real = -real;
 		imag = -imag;
 		return this;
 	}
 	
-	public Comp mul(Comp z) {
+	public Complex mul(Complex z) {
 		double temp;
 		temp = real*z.real - imag*z.imag;
 		imag = real*z.imag + imag*z.real;
@@ -77,13 +77,13 @@ public class Comp {
 		return this;
 	}
 	
-	public Comp mul(double x) {
+	public Complex mul(double x) {
 		real *= x;
 		imag *= x;
 		return this;
 	}
 	
-	public Comp div(Comp z) {
+	public Complex div(Complex z) {
 		double rrinv, temp;
 		rrinv = 1 / (z.real*z.real + z.imag*z.imag);
 		temp = (real*z.real + imag*z.imag) * rrinv;
@@ -92,13 +92,13 @@ public class Comp {
 		return this;
 	}
 	
-	public Comp div(double x) {
+	public Complex div(double x) {
 		real /= x;
 		imag /= x;
 		return this;
 	}
 	
-	public Comp inv() {
+	public Complex inv() {
 		double rrinv;
 		rrinv = 1 / (real*real + imag*imag);
 		real *=  rrinv;
@@ -106,7 +106,7 @@ public class Comp {
 		return this;
 	}
 	
-	public Comp exp() {
+	public Complex exp() {
 		double exp;
 		exp = Math.exp(real);
 		real = exp * Math.cos(imag);
@@ -114,7 +114,7 @@ public class Comp {
 		return this;
 	}
 	
-	public Comp log() {
+	public Complex log() {
 		double temp;
 		temp = 0.5 * Math.log(real * real + imag * imag);
 		imag = arg();
@@ -126,40 +126,40 @@ public class Comp {
 		return String.format("%7.3f + %7.3f*i", real, imag);
 	}
 	
-	public static Comp add(Comp w, Comp z) {
-		return new Comp(w.real + z.real, w.imag + z.imag); 
+	public static Complex add(Complex w, Complex z) {
+		return new Complex(w.real + z.real, w.imag + z.imag); 
 	}
 	
-	public static Comp sub(Comp w, Comp z) {
-		return new Comp(w.real - z.real, w.imag - z.imag);
+	public static Complex sub(Complex w, Complex z) {
+		return new Complex(w.real - z.real, w.imag - z.imag);
 	}
 	
-	public static Comp neg(Comp z) {
-		return new Comp(-z.real, -z.imag);
+	public static Complex neg(Complex z) {
+		return new Complex(-z.real, -z.imag);
 	}
 	
-	public static Comp mul(Comp w, Comp z) {
-		return new Comp(w.real*z.real - w.imag*z.imag,
+	public static Complex mul(Complex w, Complex z) {
+		return new Complex(w.real*z.real - w.imag*z.imag,
 						   w.real*z.imag + w.imag*z.real);
 	}
 
-	public static Comp div(Comp w, Comp z) {
+	public static Complex div(Complex w, Complex z) {
 		double rrinv = 1 / (z.real*z.real + z.imag*z.imag);
-		return new Comp((w.real*z.real + w.imag*z.imag) * rrinv, 
+		return new Complex((w.real*z.real + w.imag*z.imag) * rrinv, 
 						   (w.imag*z.real - w.real*z.imag) * rrinv);
 	}
 	
-	public static Comp inv(Comp z) {
+	public static Complex inv(Complex z) {
 		double invrr = 1 / (z.real*z.real + z.imag*z.imag);
-		return new Comp(z.real * invrr, -z.imag * invrr);
+		return new Complex(z.real * invrr, -z.imag * invrr);
 	}
 	
-	public static Comp exp(Comp z) {
+	public static Complex exp(Complex z) {
 		double exp = Math.exp(z.real);
-		return new Comp(exp * Math.cos(z.imag), exp * Math.sin(z.imag));
+		return new Complex(exp * Math.cos(z.imag), exp * Math.sin(z.imag));
 	}
 	
-	public static Comp log(Comp z) {
-		return new Comp(0.5 * Math.log(z.real*z.real + z.imag*z.imag), z.arg());
+	public static Complex log(Complex z) {
+		return new Complex(0.5 * Math.log(z.real*z.real + z.imag*z.imag), z.arg());
 	}
 }

@@ -21,7 +21,6 @@ public class RecordActivity extends ActionBarActivity {
 	private Playing playingState;
 	private State state;
 	
-	
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
